@@ -1,32 +1,51 @@
 import telebot
+import instaloader
+import os
 
-TOKEN = "8298332620:AAFNcCzZqsixkz7GLAz_ncdsj4RjWW2BxpE"  # token shu yerda
+# TOKEN (BotFather dan olasan)
+TOKEN = "8518545332:AAFCNCNUsv7hMmAelyYiA3dVI6yS57PzHeo"
 bot = telebot.TeleBot(TOKEN)
+
+# Instaloader obyekt
+L = instaloader.Instaloader()
 
 # /start komandasi
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "Salom! 🤖\nMen oddiy savol-javob botman.\nSavol yoz!")
+    bot.send_message(
+        message.chat.id,
+        "Salom! 👋\n\nInstagram link yubor, men yuklab beraman 📥"
+    )
 
-# Oddiy savol-javob
-@bot.message_handler(func=lambda message: True)
-def reply(message):
-    text = message.text.lower()
+# Instagram linkni ushlash
+@bot.message_handler(func=lambda message: "instagram.com" in message.text)
+def download_instagram(message):
+    url = message.text.strip()
 
-    if "salom" in text:
-        bot.send_message(message.chat.id, "Salom! Qalaysan? 😊")
+    try:
+        bot.send_message(message.chat.id, "⏳ Yuklanmoqda...")
 
-    elif "yaxshimisiz" in text:
-        bot.send_message(message.chat.id, "Rahmat, yaxshiman! Senchi?")
+        # shortcode olish
+        shortcode = url.split("/")[-2]
 
-    elif "isming nima" in text:
-        bot.send_message(message.chat.id, "Men oddiy botman 🤖")
+        post = instaloader.Post.from_shortcode(L.context, shortcode)
 
-    elif "rahmat" in text:
-        bot.send_message(message.chat.id, "Arzimaydi! 😊")
+        # video bo‘lsa
+        if post.is_video:
+            video_url = post.video_url
+            bot.send_video(message.chat.id, video_url)
 
-    else:
-        bot.send_message(message.chat.id, "Kechirasiz, tushunmadim 😅")
+        else:
+            # rasm bo‘lsa
+            for node in post.get_sidecar_nodes():
+                bot.send_photo(message.chat.id, node.display_url)
+
+            # agar oddiy bitta rasm bo‘lsa
+            if not post.typename == "GraphSidecar":
+                bot.send_photo(message.chat.id, post.url)
+
+    except Exception as e:
+        bot.send_message(message.chat.id, f"❌ Xatolik: {e}")
 
 # Botni ishga tushirish
 bot.polling()
