@@ -3,7 +3,7 @@ import instaloader
 import os
 
 # TOKEN (BotFather dan olasan)
-TOKEN = "8518545332:AAFCNCNUsv7hMmAelyYiA3dVI6yS57PzHeo"
+TOKEN = "Bot_token"
 bot = telebot.TeleBot(TOKEN)
 
 # Instaloader obyekt
